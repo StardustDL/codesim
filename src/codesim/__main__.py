@@ -14,11 +14,11 @@ def measure(src1: str, src2: str) -> float:
 
 
 @click.command()
-@click.argument("file1", type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path))
-@click.argument("file2", type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path))
+@click.argument("file1", type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path), default=None)
+@click.argument("file2", type=click.Path(exists=True, file_okay=True, dir_okay=False, resolve_path=True, path_type=pathlib.Path), default=None)
 @click.option('-v', '--verbose', count=True, default=0, type=click.IntRange(0, 4))
-@click.option("--version", is_flag=True, default=False, help="Show the version.")
-def main(file1: pathlib.Path, file2: pathlib.Path, verbose: int = 0, version: bool = False) -> None:
+@click.version_option(__version__, package_name="codesim", prog_name="codesim", message="%(prog)s v%(version)s, written by StardustDL.")
+def main(file1: pathlib.Path, file2: pathlib.Path, verbose: int = 0) -> None:
     """Codesim (https://github.com/StardustDL/codesim)"""
 
     logger = logging.getLogger("Cli-Main")
@@ -34,10 +34,6 @@ def main(file1: pathlib.Path, file2: pathlib.Path, verbose: int = 0, version: bo
     logging.basicConfig(level=loggingLevel)
 
     logger.debug(f"Logging level: {loggingLevel}")
-
-    if version:
-        click.echo(f"Codesim by StardustDL v{__version__}")
-        exit(0)
 
     try:
         src1 = file1.read_text(encoding="utf-8")
