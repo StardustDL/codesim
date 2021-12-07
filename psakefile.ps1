@@ -59,7 +59,23 @@ Task Demo {
 }
 
 Task DataTest {
-    Exec { codesim -vvv ./test/a1.c ./test/a2.c }
+    foreach ($file1 in Get-Childitem "./test/*.c") {
+        foreach ($file2 in Get-Childitem "./test/*.c") {
+            Write-Output "Compare $file1 $file2"
+            Write-Output "Time: $($(Measure-Command { Exec { codesim $file1 $file2 } | Out-Default}).TotalSeconds)"
+        }
+    }
+}
+
+Task LocalTest {
+    Set-Location ./src
+    foreach ($file1 in Get-Childitem "../test/*.c") {
+        foreach ($file2 in Get-Childitem "../test/*.c") {
+            Write-Output "Compare $file1 $file2"
+            Write-Output "Time: $($(Measure-Command { Exec { python -m codesim $file1 $file2 } | Out-Default}).TotalSeconds)"
+        }
+    }
+    Set-Location ..
 }
 
 Task Test -depends Install, Demo, DataTest, Uninstall

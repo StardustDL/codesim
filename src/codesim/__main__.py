@@ -10,7 +10,7 @@ from . import __version__
 
 
 def measure(src1: str, src2: str) -> float:
-    from .langs.cpp.main import measure
+    from .langs.cpp.needle import measure
     return measure(src1, src2)
 
 
@@ -57,7 +57,7 @@ def main(file1: pathlib.Path, file2: pathlib.Path, verbose: int = 0) -> None:
         logger.error(message, exc_info=ex)
         raise ClickException(message)
 
-    print(result * 100)
+    print(int(round(result * 1000)) / 10)
 
 
 if __name__ == '__main__':

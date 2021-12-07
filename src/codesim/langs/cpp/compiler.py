@@ -14,7 +14,7 @@ def compile(src: str):
     outFile = temp.joinpath("out.o")
     codeFile.write_text(src, encoding="utf-8")
     result = subprocess.run(
-        ["g++", str(codeFile.absolute()), "-O2", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+        ["g++", str(codeFile.absolute()), "-c", "-O2", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
     logger.info(f"Compiled with exit code {result.returncode}.")
     if result.returncode != 0:
         logger.error(f"Compiled failed: {result.stderr}.")
@@ -53,17 +53,19 @@ def objdump(objfile: pathlib.Path) -> Program:
             if l == "...":
                 continue
             try:
-                terms = [s.strip() for s in l.split(":")[1].strip().split(" ") if s.strip()]
+                terms = [s.strip() for s in l.split(
+                    ":")[1].strip().split(" ") if s.strip()]
                 opcode = terms[0]
                 extra = terms[1] if len(terms) > 1 else ""
-                if opcode != "(bad)":
+                if opcode not in ["(bad)", "nop"]:
                     func.instrs.append(Instruction(opcode, extra))
             except Exception as ex:
                 logger.error(
                     f"Failed to analysis '{l}' of {func.name}.", exc_info=ex)
         cur = p
 
-        logger.debug(f"Function {func.name} with {len(func.instrs)} instruction(s).")
+        logger.debug(
+            f"Function {func.name} with {len(func.instrs)} instruction(s).")
         result.funcs.append(func)
 
     logger.debug(f"Program with {len(result.funcs)} function(s).")
