@@ -34,6 +34,10 @@ def sigma(a: List[Any], b: List[Any]) -> int:
     return max((lcs(a, b[k:k+w]) for k in range(0, len(b) - w + 1)))
 
 
+def _normalize(x: float) -> float:
+    return 1 / (1 + math.exp(- ALPHA * x + BETA))
+
+
 def _sigmawrap(arg):
     i, j, a, b = arg
     return i, j, sigma(a, b)
@@ -87,27 +91,7 @@ def measure(src1: str, src2: str) -> float:
     sigmas = [[0 for j in range(n2)] for i in range(n1)]
     sigmainvs = [[0 for j in range(n2)] for i in range(n1)]
 
-    # results = map(_sigmawrap, items)
-    # for i, j, v in results:
-    #     sigmas[i][j] = v
-    # results = map(_sigmainv, items)
-    # for i, j, v in results:
-    #     sigmainvs[i][j] = v
-
-    def weight(i, j): return 1 / \
-        (1 + math.exp(
-            - ALPHA
-            * max(sigmas[i][j], sigmainvs[i][j])
-            / min(len(proj1[i]), len(proj2[j]))
-            + BETA
-        ))
-    # def weight(i, j): return 1 / \
-    #     (1 + math.exp(
-    #         - ALPHA
-    #         * sigmas[i][j]
-    #         / len(proj1[i])
-    #         + BETA
-    #     ))
+    def weight(i, j): return _normalize(max(sigmas[i][j], sigmainvs[i][j]) / min(len(proj1[i]), len(proj2[j])))
 
     with ProcessPoolExecutor() as pool:
         results = pool.map(_sigmawrap, items)
@@ -125,17 +109,17 @@ def measure(src1: str, src2: str) -> float:
     T = S + 1
 
     for i in range(n1):
-        c, w = len(proj1[i]), 0
+        c, w=len(proj1[i]), 0
         # logger.debug(f"edge {S} -> {i}, c: {c}, w: {w}")
         mcf.AddArcWithCapacityAndUnitCost(S, i, c, w)
         mcf.SetNodeSupply(i, 0)
     for i in range(n2):
-        c, w = len(proj2[i]), 0
+        c, w=len(proj2[i]), 0
         # logger.debug(f"edge {n1+i} -> {T}, c: {c}, w: {w}")
         mcf.AddArcWithCapacityAndUnitCost(n1 + i, T, c, w)
         mcf.SetNodeSupply(n1 + i, 0)
 
-    FACT = 10000
+    FACT=10000
 
     for i in range(n1):
         for j in range(n2):
@@ -162,6 +146,11 @@ def measure(src1: str, src2: str) -> float:
 
     cost = - mcf.OptimalCost() / FACT
 
-    logger.debug(f"Optimal cost: {cost}, similarity: {cost / supplies}")
+    rawsim = cost / supplies
 
-    return max(0.0, min(1.0, cost / supplies / 0.82))
+    sim = (rawsim - _normalize(0)) / (_normalize(1) - _normalize(0))
+
+    logger.debug(
+        f"Optimal cost: {cost}, raw similarity: {rawsim}, similarity: {sim}")
+
+    return max(0.0, min(1.0, sim))
