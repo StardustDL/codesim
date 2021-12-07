@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.4.0
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+    - name: Setup psake
+      run: Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-Module -Name psake
+    - name: Build package
+      run: |
+        Invoke-psake build
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: ./dist
+  integration-test:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        python: ["3.7", "3.8", "3.9", "3.10"]
+        experimental: [false]
+        # include:
+        #   - os: ubuntu-latest
+        #     python: "3.10.0-rc.2"
+        #     experimental: true
+    continue-on-error: ${{ matrix.experimental }}
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.3.4
+      with:
+        persist-credentials: false
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+        architecture: 'x64'
+    - name: Setup psake
+      run: Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-Module -Name psake
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: dist
+        path: ./dist
+    - name: Test
+      env:
+        PYTHONUTF8: 1
+      run: |
+        Invoke-psake test
