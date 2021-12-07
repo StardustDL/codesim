@@ -10,7 +10,8 @@ from . import __version__
 
 
 def measure(src1: str, src2: str) -> float:
-    return 0.0
+    from .langs.cpp.main import measure
+    return measure(src1, src2)
 
 
 @click.command()

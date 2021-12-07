@@ -58,7 +58,11 @@ Task Demo {
     Exec { codesim --help }
 }
 
-Task Test -depends Install, Demo, Uninstall
+Task DataTest {
+    Exec { codesim -vvv ./test/a1.c ./test/a2.c }
+}
+
+Task Test -depends Install, Demo, DataTest, Uninstall
 
 Task Clean {
     Remove-Item -Recurse ./dist
