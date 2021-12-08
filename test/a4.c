@@ -92,5 +92,10 @@ int main(){
 		}
 	}
 	printf("%d\n",maxflow(id(1,1),id(n,m)));
+
+	
+	constexpr auto lamb = [](int n)
+	{ return n * n; };
+	static_assert(lamb(3) == 9, "a");
 	return 0;
 }

@@ -2,7 +2,16 @@
 
 ## Install
 
-Install Python(>=3.7) and pip.
+Install Python(>=3.7), pip, g++, and objdump.
+
+An example script for Ubuntu 20.04.
+
+```sh
+# Ubuntu 20.04 has Python 3.8 installed, use python3 to run python
+apt update
+# Install g++ and objdump
+apt install build-essential
+```
 
 **Development Way** Install requirements.
 

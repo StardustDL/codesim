@@ -13,12 +13,20 @@ def compile(src: str):
     codeFile = temp.joinpath("src.cpp")
     outFile = temp.joinpath("out.o")
     codeFile.write_text(src, encoding="utf-8")
-    result = subprocess.run(
-        ["g++", str(codeFile.absolute()), "-c", "-O2", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
-    logger.info(f"Compiled with exit code {result.returncode}.")
-    if result.returncode != 0:
-        logger.error(f"Compiled failed: {result.stderr}.")
-    result.check_returncode()
+    try:
+        result = subprocess.run(
+            ["g++", str(codeFile.absolute()), "-c", "-O2", "-std=c++17", "-pedantic", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+        logger.info(f"Compiled C++ 17 with exit code {result.returncode}.")
+        if result.returncode != 0:
+            logger.error(f"Compiled C++ 17 failed: {result.stderr}.")
+        result.check_returncode()
+    except:
+        result = subprocess.run(
+            ["g++", str(codeFile.absolute()), "-c", "-O2", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
+        logger.info(f"Compiled default with exit code {result.returncode}.")
+        if result.returncode != 0:
+            logger.error(f"Compiled default failed: {result.stderr}.")
+        result.check_returncode()
     return outFile
 
 

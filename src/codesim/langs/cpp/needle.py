@@ -91,7 +91,8 @@ def measure(src1: str, src2: str) -> float:
     sigmas = [[0 for j in range(n2)] for i in range(n1)]
     sigmainvs = [[0 for j in range(n2)] for i in range(n1)]
 
-    def weight(i, j): return _normalize(max(sigmas[i][j], sigmainvs[i][j]) / min(len(proj1[i]), len(proj2[j])))
+    def weight(i, j): return _normalize(
+        max(sigmas[i][j], sigmainvs[i][j]) / min(len(proj1[i]), len(proj2[j])))
 
     with ProcessPoolExecutor() as pool:
         results = pool.map(_sigmawrap, items)
@@ -109,17 +110,17 @@ def measure(src1: str, src2: str) -> float:
     T = S + 1
 
     for i in range(n1):
-        c, w=len(proj1[i]), 0
+        c, w = len(proj1[i]), 0
         # logger.debug(f"edge {S} -> {i}, c: {c}, w: {w}")
         mcf.AddArcWithCapacityAndUnitCost(S, i, c, w)
         mcf.SetNodeSupply(i, 0)
     for i in range(n2):
-        c, w=len(proj2[i]), 0
+        c, w = len(proj2[i]), 0
         # logger.debug(f"edge {n1+i} -> {T}, c: {c}, w: {w}")
         mcf.AddArcWithCapacityAndUnitCost(n1 + i, T, c, w)
         mcf.SetNodeSupply(n1 + i, 0)
 
-    FACT=10000
+    FACT = 10000
 
     for i in range(n1):
         for j in range(n2):
