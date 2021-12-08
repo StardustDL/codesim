@@ -2,6 +2,10 @@
 
 ## Install
 
+Recommend OS: Ubuntu 20.04.
+
+> Other Linux distribution is OK, but Windows and Mac OS with Python 3.10 may fail since codesim depends on [ortools](https://pypi.org/project/ortools/).
+
 Install Python(>=3.7), pip, g++, and objdump.
 
 An example script for Ubuntu 20.04.

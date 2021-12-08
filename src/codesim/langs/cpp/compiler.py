@@ -21,6 +21,8 @@ def compile(src: str):
             logger.error(f"Compiled C++ 17 failed: {result.stderr}.")
         result.check_returncode()
     except:
+        result = None
+    if result is None:
         result = subprocess.run(
             ["g++", str(codeFile.absolute()), "-c", "-O2", "-o", str(outFile.absolute())], stderr=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8")
         logger.info(f"Compiled default with exit code {result.returncode}.")
