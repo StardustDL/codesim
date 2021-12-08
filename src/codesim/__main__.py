@@ -2,11 +2,12 @@ import logging
 import pathlib
 import time
 from typing import Optional
+import shutil
 
 import click
 from click.exceptions import ClickException
 
-from . import __version__
+from . import __version__, get_temp_directory
 
 
 def measure(src1: str, src2: str) -> float:
@@ -57,6 +58,8 @@ def main(file1: pathlib.Path, file2: pathlib.Path, verbose: int = 0) -> None:
         message = f"Failed to measure code similarity between {file1} and {file2}."
         logger.error(message, exc_info=ex)
         raise ClickException(message)
+
+    shutil.rmtree(get_temp_directory())
 
     print(int(round(result * 1000)) / 10)
 
