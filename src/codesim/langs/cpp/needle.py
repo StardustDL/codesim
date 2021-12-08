@@ -89,10 +89,11 @@ def measure(src1: str, src2: str) -> float:
 
     items = [(i, j, fi[i], gi[j]) for i in range(n1) for j in range(n2)]
     sigmas = [[0 for j in range(n2)] for i in range(n1)]
-    sigmainvs = [[0 for j in range(n2)] for i in range(n1)]
+    sigmainvs = [[0 for i in range(n1)] for j in range(n2)]
 
-    def weight(i, j): return _normalize(
-        max(sigmas[i][j], sigmainvs[i][j]) / min(len(proj1[i]), len(proj2[j])))
+    def weight(i, j):
+        val = max(sigmas[i][j], sigmainvs[j][i]) / min(len(proj1[i]), len(proj2[j]))
+        return _normalize(val)
 
     with ProcessPoolExecutor() as pool:
         results = pool.map(_sigmawrap, items)
@@ -100,58 +101,73 @@ def measure(src1: str, src2: str) -> float:
             sigmas[i][j] = v
         results = pool.map(_sigmainv, items)
         for i, j, v in results:
-            sigmainvs[i][j] = v
+            sigmainvs[j][i] = v
 
     logger.debug("Build weighted flow network graph.")
 
-    mcf = pywrapgraph.SimpleMinCostFlow()
+    def solve():
+        mcf = pywrapgraph.SimpleMinCostFlow()
 
-    S = n1 + n2
-    T = S + 1
+        S = n1 + n2
+        T = S + 1
 
-    for i in range(n1):
-        c, w = len(proj1[i]), 0
-        # logger.debug(f"edge {S} -> {i}, c: {c}, w: {w}")
-        mcf.AddArcWithCapacityAndUnitCost(S, i, c, w)
-        mcf.SetNodeSupply(i, 0)
-    for i in range(n2):
-        c, w = len(proj2[i]), 0
-        # logger.debug(f"edge {n1+i} -> {T}, c: {c}, w: {w}")
-        mcf.AddArcWithCapacityAndUnitCost(n1 + i, T, c, w)
-        mcf.SetNodeSupply(n1 + i, 0)
+        for i in range(n1):
+            c, w = len(proj1[i]), 0
+            # logger.debug(f"edge {S} -> {i}, c: {c}, w: {w}")
+            mcf.AddArcWithCapacityAndUnitCost(S, i, c, w)
+            mcf.SetNodeSupply(i, 0)
+        for i in range(n2):
+            c, w = len(proj2[i]), 0
+            # logger.debug(f"edge {n1+i} -> {T}, c: {c}, w: {w}")
+            mcf.AddArcWithCapacityAndUnitCost(n1 + i, T, c, w)
+            mcf.SetNodeSupply(n1 + i, 0)
 
-    FACT = 10000
+        FACT = 10000
 
-    for i in range(n1):
-        for j in range(n2):
-            c = sigmas[i][j]
-            if c > 0:
-                w = int(round(weight(i, j) * FACT))
-                # logger.debug(f"edge {i} -> {n1+j}, c: {c}, w: {w}")
-                mcf.AddArcWithCapacityAndUnitCost(
-                    i, n1 + j, c, -w)
+        for i in range(n1):
+            for j in range(n2):
+                c = sigmas[i][j]
+                if c > 0:
+                    w = int(round(weight(i, j) * FACT))
+                    logger.debug(f"edge {i} -> {n1+j}, c: {c}, w: {w}")
+                    mcf.AddArcWithCapacityAndUnitCost(
+                        i, n1 + j, c, -w)
 
-    supplies = sum((len(f) for f in proj1))
+        supplies = sum((len(f) for f in proj1))
 
-    logger.debug(f"supplies: {supplies}")
+        logger.debug(f"supplies: {supplies}")
 
-    mcf.SetNodeSupply(S, supplies)
-    mcf.SetNodeSupply(T, -supplies)
+        mcf.SetNodeSupply(S, supplies)
+        mcf.SetNodeSupply(T, -supplies)
 
-    logger.debug("Solve weighted flow network graph.")
+        logger.debug("Solve weighted flow network graph.")
 
-    status = mcf.SolveMaxFlowWithMinCost()
+        status = mcf.SolveMaxFlowWithMinCost()
 
-    if status != mcf.OPTIMAL:
-        logger.error("Failed to calculate max cost flow.")
+        if status != mcf.OPTIMAL:
+            logger.error("Failed to calculate max cost flow.")
 
-    cost = - mcf.OptimalCost() / FACT
+        cost = - mcf.OptimalCost() / FACT
 
-    rawsim = cost / supplies
+        rawsim = cost / supplies
 
-    sim = (rawsim - _normalize(0)) / (_normalize(1) - _normalize(0))
+        sim = rawsim / _normalize(1)
 
-    logger.debug(
-        f"Optimal cost: {cost}, raw similarity: {rawsim}, similarity: {sim}")
+        logger.info(
+            f"Optimal cost: {cost}, raw similarity: {rawsim}, similarity: {sim}")
+
+        return sim
+    
+    sim = solve()
+
+    # return max(0.0, min(1.0, sim))
+
+    proj1, proj2 = proj2, proj1
+    sigmas, sigmainvs = sigmainvs, sigmas
+    n1, n2 = n2, n1
+
+    sim2 = solve()
+
+    sim = (sim + sim2) / 2
 
     return max(0.0, min(1.0, sim))
