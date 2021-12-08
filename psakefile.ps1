@@ -62,7 +62,7 @@ Task DataTest {
     foreach ($file1 in Get-Childitem "./test/*.c") {
         foreach ($file2 in Get-Childitem "./test/*.c") {
             Write-Output "Compare $file1 $file2"
-            Write-Output "Time: $($(Measure-Command { Exec { codesim $file1 $file2 } | Out-Default}).TotalSeconds)"
+            Write-Output "Time: $($(Measure-Command { Exec { codesim $file1 $file2 -vvv } | Out-Default}).TotalSeconds)"
         }
     }
 }
