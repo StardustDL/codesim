@@ -1,5 +1,9 @@
 # codesim
 
+A similarity measurer on two programming assignments on Online Judge.
+
+- Algorithm implementation details is at [here](http://www.stardustdl.top/posts/projects/codesim/).
+
 ## Install
 
 Recommend OS: Ubuntu 20.04.
