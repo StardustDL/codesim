@@ -4,7 +4,7 @@
 
 A similarity measurer on two programming assignments on Online Judge.
 
-- Algorithm implementation details is at [here](http://www.stardustdl.top/posts/projects/codesim/).
+- Algorithm implementation details are at [here](http://www.stardustdl.top/posts/projects/codesim/).
 
 ## Install
 
@@ -65,3 +65,5 @@ codesim <file1> <file2>
 The code similarity measuring algorithm originates from
 
 > Jiang Y, Xu C. Needle: Detecting code plagiarism on student submissions[C]//Proceedings of ACM Turing Celebration Conference-China. 2018: 27-32.
+
+Some test cases are from [CodeNet Dataset](https://github.com/IBM/Project_CodeNet).
